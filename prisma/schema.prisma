@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  platform    String   // twitter, linkedin, facebook, instagram
+  keywords    String[] // array of keywords to search for
+  tone        String   @default("professional") // professional, friendly, casual, enthusiastic
+  status      String   @default("active") // active, paused, completed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  posts       Post[]
+  comments    Comment[]
+  
+  @@map("campaigns")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  externalId  String   // ID from the social platform
+  platform    String   // twitter, linkedin, etc.
+  author      String   // username/handle
+  content     String
+  url         String?  // link to original post
+  likes       Int      @default(0)
+  commentsCount Int    @default(0) @map("comments_count")
+  shares      Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  comments    Comment[]
+  
+  @@unique([platform, externalId])
+  @@map("posts")
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  tone        String   // tone used for generation
+  status      String   @default("draft") // draft, posted, failed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  postedAt    DateTime?
+  
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  
+  @@map("comments")
+}
