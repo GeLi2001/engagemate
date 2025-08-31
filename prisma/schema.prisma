@@ -10,57 +10,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Campaign {
+model Product {
   id          String   @id @default(cuid())
   name        String
-  platform    String   // twitter, linkedin, facebook, instagram
-  keywords    String[] // array of keywords to search for
-  tone        String   @default("professional") // professional, friendly, casual, enthusiastic
-  status      String   @default("active") // active, paused, completed
+  description String
+  link        String?  // optional product URL
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  posts       Post[]
   comments    Comment[]
   
-  @@map("campaigns")
+  @@map("products")
 }
 
-model Post {
+model RedditPost {
   id          String   @id @default(cuid())
-  externalId  String   // ID from the social platform
-  platform    String   // twitter, linkedin, etc.
-  author      String   // username/handle
+  redditId    String   @unique // Reddit post ID
+  title       String
   content     String
-  url         String?  // link to original post
-  likes       Int      @default(0)
-  commentsCount Int    @default(0) @map("comments_count")
-  shares      Int      @default(0)
+  author      String   // Reddit username
+  subreddit   String   // subreddit name
+  url         String   // Reddit post URL
+  score       Int      @default(0) // upvotes
+  commentCount Int     @default(0) @map("comment_count")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  campaignId  String?
-  campaign    Campaign? @relation(fields: [campaignId], references: [id])
   comments    Comment[]
   
-  @@unique([platform, externalId])
-  @@map("posts")
+  @@map("reddit_posts")
 }
 
 model Comment {
   id          String   @id @default(cuid())
   content     String
-  tone        String   // tone used for generation
-  status      String   @default("draft") // draft, posted, failed
+  status      String   @default("generated") // generated, posted, failed
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   postedAt    DateTime?
   
   postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post        RedditPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   
-  campaignId  String?
-  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   
   @@map("comments")
 }

@@ -1,13 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getProducts } from '@/lib/actions/products';
+import type { Product } from '@prisma/client';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  link?: string;
-}
+// Using Prisma's generated Product type
 
 interface RedditPost {
   id: string;
@@ -44,12 +41,8 @@ export default function Comments() {
   const [searchStatus, setSearchStatus] = useState<string>('');
 
   useEffect(() => {
-    // Load products and comments from localStorage
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      const parsed = JSON.parse(savedProducts);
-      setProducts(parsed.map((p: Product & { createdAt: string }) => ({ ...p, createdAt: new Date(p.createdAt) })));
-    }
+    // Load products from database and comments from localStorage
+    fetchProducts();
 
     const savedComments = localStorage.getItem('generated-comments');
     if (savedComments) {
@@ -61,6 +54,17 @@ export default function Comments() {
       })));
     }
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const result = await getProducts();
+      if (result.success && result.data) {
+        setProducts(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
 
   const saveComments = (comments: GeneratedComment[]) => {
     localStorage.setItem('generated-comments', JSON.stringify(comments));

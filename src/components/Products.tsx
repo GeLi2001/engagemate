@@ -1,14 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getProducts, createProductFromJSON, updateProductFromJSON, deleteProduct } from '@/lib/actions/products';
+import type { Product } from '@prisma/client';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  link?: string;
-  createdAt: Date;
-}
+// Using Prisma's generated Product type
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,48 +18,61 @@ export default function Products() {
   });
 
   useEffect(() => {
-    // Load products from localStorage
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      const parsed = JSON.parse(savedProducts);
-      setProducts(parsed.map((p: any) => ({ ...p, createdAt: new Date(p.createdAt) })));
-    }
+    fetchProducts();
   }, []);
 
-  const saveProducts = (updatedProducts: Product[]) => {
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    setProducts(updatedProducts);
+  const fetchProducts = async () => {
+    try {
+      const result = await getProducts();
+      if (result.success && result.data) {
+        setProducts(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name.trim() || !formData.description.trim()) return;
 
-    if (editingProduct) {
-      // Update existing product
-      const updatedProducts = products.map(p => 
-        p.id === editingProduct.id 
-          ? { ...p, name: formData.name, description: formData.description, link: formData.link }
-          : p
-      );
-      saveProducts(updatedProducts);
-      setEditingProduct(null);
-    } else {
-      // Create new product
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        name: formData.name,
-        description: formData.description,
-        link: formData.link || undefined,
-        createdAt: new Date()
-      };
-      saveProducts([...products, newProduct]);
-    }
+    try {
+      if (editingProduct) {
+        // Update existing product
+        const result = await updateProductFromJSON(editingProduct.id, {
+          name: formData.name,
+          description: formData.description,
+          link: formData.link || undefined
+        });
 
-    // Reset form
-    setFormData({ name: '', description: '', link: '' });
-    setIsCreating(false);
+        if (result.success) {
+          await fetchProducts(); // Refresh products list
+          setEditingProduct(null);
+        } else {
+          console.error('Error updating product:', result.error);
+        }
+      } else {
+        // Create new product
+        const result = await createProductFromJSON({
+          name: formData.name,
+          description: formData.description,
+          link: formData.link || undefined
+        });
+
+        if (result.success) {
+          await fetchProducts(); // Refresh products list
+        } else {
+          console.error('Error creating product:', result.error);
+        }
+      }
+
+      // Reset form
+      setFormData({ name: '', description: '', link: '' });
+      setIsCreating(false);
+    } catch (error) {
+      console.error('Error saving product:', error);
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -76,10 +85,19 @@ export default function Products() {
     setIsCreating(true);
   };
 
-  const handleDelete = (productId: string) => {
+  const handleDelete = async (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      const updatedProducts = products.filter(p => p.id !== productId);
-      saveProducts(updatedProducts);
+      try {
+        const result = await deleteProduct(productId);
+        
+        if (result.success) {
+          await fetchProducts(); // Refresh products list
+        } else {
+          console.error('Error deleting product:', result.error);
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+      }
     }
   };
 
