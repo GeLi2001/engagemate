@@ -19,15 +19,8 @@ if ! command -v cargo-tauri &> /dev/null; then
     cargo install tauri-cli
 fi
 
-# Start the database if not running
-if ! docker ps | grep -q postgres; then
-    echo "🗄️  Starting PostgreSQL database..."
-    docker-compose up -d
-    sleep 3
-fi
-
-# Push database schema
-echo "📊 Setting up database..."
+# Initialize SQLite database
+echo "📊 Setting up SQLite database..."
 npx prisma db push
 
 # Launch desktop app

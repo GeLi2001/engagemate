@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getProducts } from '@/lib/actions/products';
+import { getProducts, initPrismaDatabase } from '@/lib/actions/prisma-products';
 import type { Product } from '@prisma/client';
 
 // Using Prisma's generated Product type
@@ -41,26 +41,33 @@ export default function Comments() {
   const [searchStatus, setSearchStatus] = useState<string>('');
 
   useEffect(() => {
-    // Load products from database and comments from localStorage
-    fetchProducts();
-
-    const savedComments = localStorage.getItem('generated-comments');
-    if (savedComments) {
-      const parsed = JSON.parse(savedComments);
-      setGeneratedComments(parsed.map((c: GeneratedComment & { createdAt: string; post: RedditPost & { created: string } }) => ({ 
-        ...c, 
-        createdAt: new Date(c.createdAt),
-        post: { ...c.post, created: new Date(c.post.created) }
-      })));
-    }
+    initializeAndLoadData();
   }, []);
+
+  const initializeAndLoadData = async () => {
+    try {
+      await initPrismaDatabase();
+      await fetchProducts();
+      
+      // Load comments from localStorage for now (we can migrate this to SQLite later)
+      const savedComments = localStorage.getItem('generated-comments');
+      if (savedComments) {
+        const parsed = JSON.parse(savedComments);
+        setGeneratedComments(parsed.map((c: GeneratedComment & { createdAt: string; post: RedditPost & { created: string } }) => ({ 
+          ...c, 
+          createdAt: new Date(c.createdAt),
+          post: { ...c.post, created: new Date(c.post.created) }
+        })));
+      }
+    } catch (error) {
+      console.error('Error initializing:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
-      const result = await getProducts();
-      if (result.success && result.data) {
-        setProducts(result.data);
-      }
+      const products = await getProducts();
+      setProducts(products);
     } catch (error) {
       console.error('Error fetching products:', error);
     }

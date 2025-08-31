@@ -13,26 +13,16 @@ cd engagemate
 
 **Desktop app launches automatically!** No browser needed. 🎉
 
-### Option 2: Web App (Docker)
-```bash
-git clone https://github.com/yourusername/engagemate.git
-cd engagemate
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Visit `http://localhost:3000`
-
-### Option 3: Local Development
+### Option 2: Local Development
 ```bash
 git clone https://github.com/yourusername/engagemate.git
 cd engagemate
 npm install
-docker compose up -d  # Start database
-npx prisma db push    # Setup database
-npm run dev
+npx prisma db push    # Setup SQLite database
+npm run dev           # Start web version
 ```
 
-Visit `http://localhost:3001`
+Visit `http://localhost:3000`
 
 ## 📋 Setup Guide
 
@@ -58,13 +48,14 @@ Visit `http://localhost:3001`
 - ✅ **Reddit Integration** - Search posts by subreddit/keywords
 - ✅ **AI Comment Generation** - Contextual, natural comments
 - ✅ **Comment Management** - Review before posting
-- ✅ **Modern Stack** - Next.js 14, TypeScript, Tailwind, PostgreSQL
+- ✅ **Modern Stack** - Next.js 14, TypeScript, Tailwind, SQLite
 
 ## 🔧 Configuration
 
 ### Environment Variables
 ```bash
-DATABASE_URL="postgresql://dev:dev@localhost:5432/engagemate"
+# SQLite database is automatically created
+# No DATABASE_URL needed!
 OPENAI_API_KEY="your-openai-api-key"  # Optional for AI features
 ```
 
@@ -120,10 +111,10 @@ cd engagemate
 ## 📚 Tech Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Next.js Server Actions, Prisma ORM
-- **Database**: PostgreSQL
+- **Backend**: Prisma ORM (client-side)
+- **Database**: SQLite (embedded)
 - **Desktop**: Tauri (Rust + WebView)
-- **Deployment**: Docker, Docker Compose
+- **Distribution**: GitHub Releases, Direct Download
 
 ## 🤝 Contributing
 

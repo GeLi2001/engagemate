@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma']
-  }
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
+  serverExternalPackages: ['@prisma/client', 'prisma']
 }
 
 module.exports = nextConfig

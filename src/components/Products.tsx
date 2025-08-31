@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getProducts, createProductFromJSON, updateProductFromJSON, deleteProduct } from '@/lib/actions/products';
+import { getProducts, createProduct, updateProduct, deleteProduct, initPrismaDatabase } from '@/lib/actions/prisma-products';
 import type { Product } from '@prisma/client';
 
 // Using Prisma's generated Product type
@@ -18,15 +18,22 @@ export default function Products() {
   });
 
   useEffect(() => {
-    fetchProducts();
+    initializeAndFetchProducts();
   }, []);
+
+  const initializeAndFetchProducts = async () => {
+    try {
+      await initPrismaDatabase();
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error initializing database:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
-      const result = await getProducts();
-      if (result.success && result.data) {
-        setProducts(result.data);
-      }
+      const products = await getProducts();
+      setProducts(products);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -40,33 +47,24 @@ export default function Products() {
     try {
       if (editingProduct) {
         // Update existing product
-        const result = await updateProductFromJSON(editingProduct.id, {
+        await updateProduct(editingProduct.id, {
           name: formData.name,
           description: formData.description,
           link: formData.link || undefined
         });
-
-        if (result.success) {
-          await fetchProducts(); // Refresh products list
-          setEditingProduct(null);
-        } else {
-          console.error('Error updating product:', result.error);
-        }
+        setEditingProduct(null);
       } else {
         // Create new product
-        const result = await createProductFromJSON({
+        await createProduct({
           name: formData.name,
           description: formData.description,
           link: formData.link || undefined
         });
-
-        if (result.success) {
-          await fetchProducts(); // Refresh products list
-        } else {
-          console.error('Error creating product:', result.error);
-        }
       }
 
+      // Refresh products list
+      await fetchProducts();
+      
       // Reset form
       setFormData({ name: '', description: '', link: '' });
       setIsCreating(false);
@@ -88,13 +86,8 @@ export default function Products() {
   const handleDelete = async (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
       try {
-        const result = await deleteProduct(productId);
-        
-        if (result.success) {
-          await fetchProducts(); // Refresh products list
-        } else {
-          console.error('Error deleting product:', result.error);
-        }
+        await deleteProduct(productId);
+        await fetchProducts(); // Refresh products list
       } catch (error) {
         console.error('Error deleting product:', error);
       }
