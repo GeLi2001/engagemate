@@ -45,6 +45,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Setup database
+        run: npx prisma db push
+
       - uses: tauri-apps/tauri-action@v0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
