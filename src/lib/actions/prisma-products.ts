@@ -16,9 +16,29 @@ export async function initPrismaDatabase() {
     // This will create the database file and tables if they don't exist
     await prisma.$connect();
     console.log('Database connected successfully');
+    
+    // Check if we need to run migrations (in case of app updates)
+    await checkAndRunMigrations();
   } catch (error) {
     console.error('Database connection error:', error);
     throw error;
+  }
+}
+
+async function checkAndRunMigrations() {
+  try {
+    // Try a simple query to test schema compatibility
+    await prisma.product.findFirst();
+  } catch (error) {
+    console.log('Schema mismatch detected, running migrations...');
+    
+    // Import invoke dynamically to avoid issues in non-Tauri environments
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('run_migrations');
+    
+    console.log('Migrations completed, reconnecting...');
+    await prisma.$disconnect();
+    await prisma.$connect();
   }
 }
 

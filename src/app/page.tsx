@@ -1,14 +1,20 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Products from '@/components/Products';
 import Comments from '@/components/Comments';
 import Settings from '@/components/Settings';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { initAutoUpdater } from '@/lib/updater';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('products');
+
+  useEffect(() => {
+    // Initialize auto-updater when app starts
+    initAutoUpdater();
+  }, []);
 
   const renderActiveTab = () => {
     switch (activeTab) {

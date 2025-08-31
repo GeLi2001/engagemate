@@ -25,6 +25,14 @@
       "csp": null
     }
   },
+  "updater": {
+    "active": true,
+    "endpoints": [
+      "https://github.com/{{owner}}/{{repo}}/releases/latest/download/latest.json"
+    ],
+    "dialog": true,
+    "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhEQTlBM0ZBMjNGNDJEMkIKUldSWTRKcUhaOGhsMnpobzNkYjJhSzlhVGdZQW1VQ0dqbzFkbVF6QWxUQ1pOQkN4RkMwMUhCeGcK"
+  },
   "bundle": {
     "active": true,
     "targets": "all",
